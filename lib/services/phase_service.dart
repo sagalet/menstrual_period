@@ -17,12 +17,12 @@ class PhaseService {
 
   static int totalDays(AppSettings settings) => settings.totalDays;
 
-  /// Returns the [CyclePhase] for [date], or null when the date is not covered
-  /// by a single cycle following the most recent start on/before it.
+  /// Returns the start date of the cycle that covers [date], or null when
+  /// [date] is not within any recorded cycle.
   ///
-  /// Each recorded start colours exactly one full cycle ([AppSettings.totalDays]
-  /// days); dates beyond that window are left uncoloured.
-  static CyclePhase? phaseFor(
+  /// A cycle is governed by the most recent start on/before [date] and spans
+  /// exactly [AppSettings.totalDays] days.
+  static DateTime? governingStartFor(
     DateTime date,
     List<DateTime> startDates,
     AppSettings settings,
@@ -54,7 +54,25 @@ class PhaseService {
     if (offset < 0 || offset >= total) {
       return null;
     }
+    return governing;
+  }
 
+  /// Returns the [CyclePhase] for [date], or null when the date is not covered
+  /// by a single cycle following the most recent start on/before it.
+  ///
+  /// Each recorded start colours exactly one full cycle ([AppSettings.totalDays]
+  /// days); dates beyond that window are left uncoloured.
+  static CyclePhase? phaseFor(
+    DateTime date,
+    List<DateTime> startDates,
+    AppSettings settings,
+  ) {
+    final governing = governingStartFor(date, startDates, settings);
+    if (governing == null) {
+      return null;
+    }
+
+    final offset = dateOnly(date).difference(governing).inDays;
     var cumulative = 0;
     for (final phase in order) {
       cumulative += settings.configFor(phase).length;

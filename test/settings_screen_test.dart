@@ -57,7 +57,9 @@ void main() {
     await tester.pumpWidget(_wrap(harness.appState));
     await tester.pumpAndSettle();
 
-    // Pick the light-blue preset for the menstrual phase.
+    // Open the palette via the square colour swatch, then pick light-blue.
+    await tester.tap(find.byKey(const Key('menstrual_color_swatch')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('menstrual_color_4290502395')));
     await tester.pumpAndSettle();
 
@@ -65,5 +67,19 @@ void main() {
       harness.appState.settings.configFor(CyclePhase.menstrual).colorValue,
       0xFFBBDEFB,
     );
+  });
+
+  testWidgets('total-days label renders at 1.5x the default font size',
+      (tester) async {
+    await tester.pumpWidget(_wrap(harness.appState));
+    await tester.pumpAndSettle();
+
+    final totalText = tester.widget<Text>(
+      find.byKey(const Key('total_days_value')),
+    );
+    final base = DefaultTextStyle.of(
+      tester.element(find.byKey(const Key('total_days_value'))),
+    ).style.fontSize ?? 14;
+    expect(totalText.style?.fontSize, closeTo(base * 1.5, 0.01));
   });
 }

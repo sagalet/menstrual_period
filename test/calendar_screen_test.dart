@@ -51,7 +51,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('設定為月經起始日'), findsOneWidget);
-    expect(find.text('清除月經起始日'), findsOneWidget);
     expect(find.byKey(const Key('cancel_button')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('cancel_button')));
@@ -113,5 +112,33 @@ void main() {
     final marked = DateTime(month.year, month.month, 15);
     expect(harness.appState.isStart(marked), isTrue);
     expect(harness.appState.phaseFor(marked), CyclePhase.menstrual);
+  });
+
+  testWidgets('tapping an in-cycle day offers clearing the whole cycle',
+      (tester) async {
+    await tester.pumpWidget(MenstrualApp(appState: harness.appState));
+    await tester.pumpAndSettle();
+
+    // Record a start on day 10 so surrounding days fall within the cycle.
+    await tester.tap(find.text('10').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('設定為月經起始日'));
+    await tester.pumpAndSettle();
+
+    // Tap a later day still inside the cycle (day 12).
+    await tester.tap(find.text('12').first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('重新設定整個周期'), findsOneWidget);
+    expect(find.text('清除整個周期'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('clear_cycle_tile')));
+    await tester.pumpAndSettle();
+
+    final month = harness.appState.focusedMonth;
+    expect(harness.appState.isStart(DateTime(month.year, month.month, 10)),
+        isFalse);
+    expect(harness.appState.phaseFor(DateTime(month.year, month.month, 12)),
+        isNull);
   });
 }

@@ -19,14 +19,17 @@ class CalendarScreen extends StatelessWidget {
     final action = await showDayActionSheet(
       context,
       date,
-      isStart: appState.isStart(date),
+      isInCycle: appState.isInCycle(date),
     );
     switch (action) {
       case DayAction.setStart:
         await appState.setStart(date);
         break;
-      case DayAction.clearStart:
-        await appState.clearStart(date);
+      case DayAction.resetCycle:
+        await appState.resetCycle(date);
+        break;
+      case DayAction.clearCycle:
+        await appState.clearCycle(date);
         break;
       case null:
         break;

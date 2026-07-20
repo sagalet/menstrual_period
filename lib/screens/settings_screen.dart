@@ -40,11 +40,11 @@ class SettingsScreen extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
                     '週期總天數',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: _totalDaysFontSize(context),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -52,8 +52,8 @@ class SettingsScreen extends StatelessWidget {
                 Text(
                   '${settings.totalDays} 天',
                   key: const Key('total_days_value'),
-                  style: const TextStyle(
-                    fontSize: 16,
+                  style: TextStyle(
+                    fontSize: _totalDaysFontSize(context),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -63,6 +63,12 @@ class SettingsScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// Total-days label rendered at 1.5x the default body text size.
+  double _totalDaysFontSize(BuildContext context) {
+    final base = DefaultTextStyle.of(context).style.fontSize ?? 14;
+    return base * 1.5;
   }
 }
 
@@ -92,65 +98,85 @@ class _PhaseSettingCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: Padding(
         padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Row(
-              children: [
-                Container(
-                  width: 18,
-                  height: 18,
-                  decoration: BoxDecoration(
-                    color: Color(colorValue),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.black12),
-                  ),
+            // Square background-colour icon shown to the left of the day-count
+            // controls; tapping it opens the colour palette.
+            GestureDetector(
+              key: Key('${keyPrefix}_color_swatch'),
+              onTap: () => _pickColor(context),
+              child: Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: Color(colorValue),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: Colors.black26),
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  phase.label,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Spacer(),
-                IconButton(
-                  key: Key('${keyPrefix}_length_decrement'),
-                  icon: const Icon(Icons.remove_circle_outline),
-                  onPressed: length > minLength
-                      ? () => onLengthChanged(length - 1)
-                      : null,
-                ),
-                SizedBox(
-                  width: 48,
-                  child: Text(
-                    '$length天',
-                    key: Key('${keyPrefix}_length_value'),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ),
-                IconButton(
-                  key: Key('${keyPrefix}_length_increment'),
-                  icon: const Icon(Icons.add_circle_outline),
-                  onPressed: length < maxLength
-                      ? () => onLengthChanged(length + 1)
-                      : null,
-                ),
-              ],
+              ),
             ),
-            const SizedBox(height: 8),
-            const Text('背景顏色', style: TextStyle(fontSize: 14)),
-            const SizedBox(height: 8),
-            ColorPaletteSelector(
-              keyPrefix: '${keyPrefix}_color',
-              selectedColor: colorValue,
-              onSelected: onColorChanged,
+            const SizedBox(width: 12),
+            Text(
+              phase.label,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const Spacer(),
+            IconButton(
+              key: Key('${keyPrefix}_length_decrement'),
+              icon: const Icon(Icons.remove_circle_outline),
+              onPressed: length > minLength
+                  ? () => onLengthChanged(length - 1)
+                  : null,
+            ),
+            SizedBox(
+              width: 48,
+              child: Text(
+                '$length天',
+                key: Key('${keyPrefix}_length_value'),
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 16),
+              ),
+            ),
+            IconButton(
+              key: Key('${keyPrefix}_length_increment'),
+              icon: const Icon(Icons.add_circle_outline),
+              onPressed: length < maxLength
+                  ? () => onLengthChanged(length + 1)
+                  : null,
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Future<void> _pickColor(BuildContext context) async {
+    final keyPrefix = phase.storageKey;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text('${phase.label}背景顏色'),
+          content: ColorPaletteSelector(
+            keyPrefix: '${keyPrefix}_color',
+            selectedColor: colorValue,
+            onSelected: (value) {
+              onColorChanged(value);
+              Navigator.of(dialogContext).pop();
+            },
+          ),
+          actions: [
+            TextButton(
+              key: Key('${keyPrefix}_color_cancel'),
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('取消'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

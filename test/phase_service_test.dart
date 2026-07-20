@@ -106,4 +106,59 @@ void main() {
       isNull,
     );
   });
+
+  group('governingStartFor', () {
+    test('returns the start for any day within the cycle', () {
+      for (final day in [1, 5, 14, 28]) {
+        expect(
+          PhaseService.governingStartFor(
+            DateTime(2026, 1, day),
+            [start],
+            settings,
+          ),
+          start,
+          reason: 'Jan $day',
+        );
+      }
+    });
+
+    test('returns null before the first start or beyond the cycle', () {
+      expect(
+        PhaseService.governingStartFor(
+          DateTime(2025, 12, 31),
+          [start],
+          settings,
+        ),
+        isNull,
+      );
+      expect(
+        PhaseService.governingStartFor(
+          DateTime(2026, 1, 29),
+          [start],
+          settings,
+        ),
+        isNull,
+      );
+    });
+
+    test('picks the most recent start on/before the date', () {
+      final secondStart = DateTime(2026, 1, 20);
+      expect(
+        PhaseService.governingStartFor(
+          DateTime(2026, 1, 22),
+          [start, secondStart],
+          settings,
+        ),
+        secondStart,
+      );
+      expect(
+        PhaseService.governingStartFor(
+          DateTime(2026, 1, 19),
+          [start, secondStart],
+          settings,
+        ),
+        start,
+      );
+    });
+  });
 }

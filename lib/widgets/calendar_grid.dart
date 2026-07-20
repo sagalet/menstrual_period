@@ -37,17 +37,23 @@ class CalendarGrid extends StatelessWidget {
       ),
       itemCount: totalCells,
       itemBuilder: (context, index) {
+        final cellBorder = Border.all(color: Colors.black12, width: 0.5);
         if (index < leadingBlanks) {
-          return const SizedBox.shrink();
+          return DecoratedBox(
+            decoration: BoxDecoration(border: cellBorder),
+          );
         }
         final day = index - leadingBlanks + 1;
         final date = DateTime(month.year, month.month, day);
-        return DayCell(
-          date: date,
-          backgroundColor: colorFor(date),
-          isStart: isStart(date),
-          isToday: isSameDay(date, today),
-          onTap: () => onDayTap(date),
+        return DecoratedBox(
+          decoration: BoxDecoration(border: cellBorder),
+          child: DayCell(
+            date: date,
+            backgroundColor: colorFor(date),
+            isStart: isStart(date),
+            isToday: isSameDay(date, today),
+            onTap: () => onDayTap(date),
+          ),
         );
       },
     );

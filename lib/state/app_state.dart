@@ -35,6 +35,10 @@ class AppState extends ChangeNotifier {
   /// Whether [date] is a recorded menstrual start day.
   bool isStart(DateTime date) => _startDates.contains(dateOnly(date));
 
+  /// Whether [date] falls within a recorded cycle.
+  bool isInCycle(DateTime date) =>
+      PhaseService.governingStartFor(date, startDates, _settings) != null;
+
   /// The cycle phase for [date], or null when uncoloured.
   CyclePhase? phaseFor(DateTime date) =>
       PhaseService.phaseFor(date, startDates, _settings);
@@ -59,6 +63,34 @@ class AppState extends ChangeNotifier {
     final d = dateOnly(date);
     _startDates.remove(d);
     await _storage.removeStartDate(d);
+    notifyListeners();
+  }
+
+  /// Clears the entire cycle that covers [date] by removing its governing
+  /// start date. Does nothing when [date] is not within a cycle.
+  Future<void> clearCycle(DateTime date) async {
+    final governing =
+        PhaseService.governingStartFor(date, startDates, _settings);
+    if (governing == null) {
+      return;
+    }
+    _startDates.remove(governing);
+    await _storage.removeStartDate(governing);
+    notifyListeners();
+  }
+
+  /// Re-sets the cycle covering [date]: removes the existing governing start
+  /// (if any) and records [date] as the new start day.
+  Future<void> resetCycle(DateTime date) async {
+    final d = dateOnly(date);
+    final governing =
+        PhaseService.governingStartFor(date, startDates, _settings);
+    if (governing != null && governing != d) {
+      _startDates.remove(governing);
+      await _storage.removeStartDate(governing);
+    }
+    _startDates.add(d);
+    await _storage.addStartDate(d);
     notifyListeners();
   }
 
